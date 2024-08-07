@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styles from "./chat.module.css";
 import { AssistantStream } from "openai/lib/AssistantStream";
 import Markdown from "react-markdown";
+
+import { useUser } from "@auth0/nextjs-auth0/client";
+
 // @ts-expect-error - no types for this yet
 import { AssistantStreamEvent } from "openai/resources/beta/assistants/assistants";
 import { RequiredActionFunctionToolCall } from "openai/resources/beta/threads/runs/runs";
@@ -67,9 +70,19 @@ const Chat = ({
 
   // automatically scroll to bottom of chat
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const { user } = useUser();
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const updateRateLimitData = () => {
+    const currentTime = Date.now().toString();
+    const currentCount = parseInt(localStorage.getItem("messageCount") || "0");
+    localStorage.setItem("lastMessageTime", currentTime);
+    localStorage.setItem("messageCount", (currentCount + 1).toString());
+  };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -83,21 +96,58 @@ const Chat = ({
       const data = await res.json();
       setThreadId(data.threadId);
     };
-    createThread();
+    createThread().then((r) => r);
   }, []);
 
-  const sendMessage = async (text) => {
-    const response = await fetch(
-      `/api/assistants/threads/${threadId}/messages`,
-      {
-        method: "POST",
-        body: JSON.stringify({
-          content: text,
-        }),
+  const sendMessage = async (text: string) => {
+    try {
+      const response = await fetch(
+        `/api/assistants/threads/${threadId}/messages`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            content: text,
+          }),
+        }
+      );
+
+      if (response.status === 429) {
+        const retryAfter = parseFloat(
+          response.headers.get("Retry-After") || "0"
+        );
+        const message = `Please wait ${retryAfter.toFixed(
+          1
+        )} seconds before sending your next message.`;
+
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { role: "assistant", text: message },
+        ]);
+        setInputDisabled(true);
+
+        console.log(
+          "Rate limit exceeded. Please try again later. Response:",
+          response
+        );
+
+        return;
       }
-    );
-    const stream = AssistantStream.fromReadableStream(response.body);
-    handleReadableStream(stream);
+
+      console.log("Message sent successfully, respones:", response);
+
+      const stream = AssistantStream.fromReadableStream(response.body);
+      handleReadableStream(stream);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          role: "assistant",
+          text: "An error occurred. Please try again later.",
+        },
+      ]);
+      setInputDisabled(false);
+    }
   };
 
   const submitActionResult = async (runId, toolCallOutputs) => {
@@ -142,7 +192,7 @@ const Chat = ({
   const handleTextDelta = (delta) => {
     if (delta.value != null) {
       appendToLastMessage(delta.value);
-    };
+    }
     if (delta.annotations != null) {
       annotateLastMessage(delta.annotations);
     }
@@ -151,7 +201,7 @@ const Chat = ({
   // imageFileDone - show image in chat
   const handleImageFileDone = (image) => {
     appendToLastMessage(`\n![${image.file_id}](/api/files/${image.file_id})\n`);
-  }
+  };
 
   // toolCallCreated - log new tool call
   const toolCallCreated = (toolCall) => {
@@ -209,10 +259,10 @@ const Chat = ({
   };
 
   /*
-    =======================
-    === Utility Helpers ===
-    =======================
-  */
+      =======================
+      === Utility Helpers ===
+      =======================
+    */
 
   const appendToLastMessage = (text) => {
     setMessages((prevMessages) => {
@@ -236,17 +286,16 @@ const Chat = ({
         ...lastMessage,
       };
       annotations.forEach((annotation) => {
-        if (annotation.type === 'file_path') {
+        if (annotation.type === "file_path") {
           updatedLastMessage.text = updatedLastMessage.text.replaceAll(
             annotation.text,
             `/api/files/${annotation.file_path.file_id}`
           );
         }
-      })
+      });
       return [...prevMessages.slice(0, -1), updatedLastMessage];
     });
-    
-  }
+  };
 
   return (
     <div className={styles.chatContainer}>
@@ -275,6 +324,14 @@ const Chat = ({
           Send
         </button>
       </form>
+      {!user && messages.length >= 5 && (
+        <div className={styles.signUpPrompt}>
+          <p>Sign up for unlimited access!</p>
+          <a href="/api/auth/login" className={styles.signUpButton}>
+            Sign Up
+          </a>
+        </div>
+      )}
     </div>
   );
 };
