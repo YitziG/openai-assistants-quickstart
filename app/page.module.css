@@ -4,8 +4,9 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: white;
+  background-color: transparent; /* Ensure background is transparent */
 }
+
 .title {
   font-size: 1.5em;
   margin-bottom: 20px;
@@ -44,4 +45,9 @@
 
 .category:hover {
   background-color: #e3e3eb;
+}
+
+.cablesEle{
+  display: none
+
 }

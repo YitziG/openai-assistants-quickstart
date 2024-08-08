@@ -1,31 +1,32 @@
-import {Inter} from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import Warnings from "./components/warnings";
-import {assistantId} from "./assistant-config";
-import {UserProvider} from "@auth0/nextjs-auth0/client";
-import Navigation from "@/app/Navigation";
+import { assistantId } from "./assistant-config";
+import { UserProvider } from "@auth0/nextjs-auth0/client";
+import CanvasComponent from "@/app/components/CanvasComponent";
 
-const inter = Inter({subsets: ["latin"]});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-    title: "Assistants API Quickstart",
-    description: "A quickstart template using the Assistants API with OpenAI",
-    icons: {
-        icon: "/openai.svg",
-    },
+  title: "Yafutzu - Empowering Intelligence",
+  description: "Spreading light",
+  icons: {
+    icon: "/yafutzu-icon.svg",
+  },
 };
 
-export default function RootLayout({children}) {
-    return (
-        <html lang="en">
-        <UserProvider>
-            <body className={inter.className}>
-                <header>
-                    <Navigation/>
-                </header>
-                {assistantId ? children : <Warnings/>}
-            </body>
-        </UserProvider>
-        </html>
-    );
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en">
+
+      <UserProvider>
+        <body className={inter.className}>
+          <CanvasComponent />
+          <div className="content">
+          <main>{assistantId ? children : <Warnings />}</main>
+          </div>
+        </body>
+      </UserProvider>
+    </html>
+  );
 }
