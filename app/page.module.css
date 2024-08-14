@@ -94,3 +94,15 @@
 .button:hover {
   background-color: #0066cc;
 }
+
+.statusIndicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.ai-status-indicator {
+  width: 80px;
+  height: 80px;
+}
