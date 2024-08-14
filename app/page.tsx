@@ -1,23 +1,30 @@
 'use client';
 
-import { useState } from 'react';
-import { ClientMessage } from './actions';
-import { useActions } from 'ai/rsc';
+import styles from './page.module.css'
+
+import {useEffect, useRef, useState} from 'react';
+import {ClientMessage, submitMessage} from './actions';
+import {useActions} from 'ai/rsc';
 
 export default function Home() {
+    const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
-    const [messages, setMessages] = useState<ClientMessage[]>([]);
-    const { submitMessage } = useActions();
+    const messagesEndRef = useRef(null);
 
-    const handleSubmission = async () => {
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
 
-        setMessages(currentMessages => [...currentMessages, {
-            "role": "user",
-            "text": input,
-            "id": "134",
-            "status": "status",
-            "gui": "gui"
-        }]);
+    useEffect(scrollToBottom, [messages]);
+
+    const handleSubmit = async (e) => {
+
+        e.preventDefault();
+        if (!input.trim()) return;
+
+        // Add user message
+        setMessages(prev => [...prev, { role: 'user', text: input }]);
+        setInput('');
 
         let {id, status, text, gui} = await submitMessage(input);
 
@@ -34,45 +41,33 @@ export default function Home() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center h-screen">
-            <div className="chatContainer w-full max-w-2xl flex-grow overflow-y-auto">
-                <div className="messages">
+        <div className={styles.container}>
+            <h1 className={styles.title}>Chat Assistant</h1>
+            <div className={styles.chatContainer}>
+                <div className={styles.messages}>
                     {messages.map((message, index) => (
-                        <div key={message.id} className="flex flex-col gap-1 border-b p-2">
-                            {message.status && (
-                                <div className="streamingStatus">
-                                    {message.status}
-                                </div>
-                            )}
-                            {message.text && (
-                                <div className="streamingText">
-                                    {message.text}
-                                </div>
-                            )}
+                        <div key={index}
+                             className={`${styles.message} ${message.role === 'user' ? styles.userMessage : styles.assistantMessage}`}>
+                            <div className={styles.messageHeader}>
+                                {message.role === 'user' ? 'You' : 'Assistant'}
+                            </div>
+                            <div className={styles.messageText}>
+                                {message.text}
+                            </div>
                         </div>
                     ))}
+                    <div ref={messagesEndRef}/>
                 </div>
             </div>
-
-            <div className="inputForm w-full max-w-2xl flex justify-center items-center mt-4">
+            <form onSubmit={handleSubmit} className={styles.inputForm}>
                 <input
-                    className="input flex-grow"
+                    className={styles.input}
                     value={input}
-                    onChange={event => setInput(event.target.value)}
-                    placeholder="Ask a question"
-                    onKeyDown={event => {
-                        if (event.key === 'Enter') {
-                            handleSubmission();
-                        }
-                    }}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Type your message..."
                 />
-                <button
-                    className="button ml-2"
-                    onClick={handleSubmission}
-                >
-                    Send
-                </button>
-            </div>
+                <button type="submit" className={styles.button}>Send</button>
+            </form>
         </div>
     );
 }
