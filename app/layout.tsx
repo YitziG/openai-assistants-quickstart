@@ -4,6 +4,7 @@ import Warnings from "./components/warnings";
 import { assistantId } from "./assistant-config";
 import { UserProvider } from "@auth0/nextjs-auth0/client";
 import CanvasComponent from "@/app/components/CanvasComponent";
+import { AI } from "./actions";  // Import the AI component
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,16 +18,17 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-
+      <html lang="en">
       <UserProvider>
         <body className={inter.className}>
-          <CanvasComponent />
+          {/* <CanvasComponent /> */}
           <div className="content">
-          <main>{assistantId ? children : <Warnings />}</main>
+            <AI>
+              <main>{assistantId ? children : <Warnings />}</main>
+            </AI>
           </div>
         </body>
       </UserProvider>
-    </html>
+      </html>
   );
 }
