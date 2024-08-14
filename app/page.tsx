@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ClientMessage, submitMessage } from './actions';
+import { ClientMessage } from './actions';
 import { useActions } from 'ai/rsc';
 
 export default function Home() {
@@ -10,9 +10,26 @@ export default function Home() {
     const { submitMessage } = useActions();
 
     const handleSubmission = async () => {
-        const message = await submitMessage(input);
 
-        setMessages(currentMessages => [...currentMessages, message]);
+        setMessages(currentMessages => [...currentMessages, {
+            "role": "user",
+            "text": input,
+            "id": "134",
+            "status": "status",
+            "gui": "gui"
+        }]);
+
+        let {id, status, text, gui} = await submitMessage(input);
+
+        setMessages(currentMessages => [...currentMessages, {
+            "role": "assistant",
+            "text": text,
+            "id": id,
+            "status": status,
+            "gui": gui
+        }]);
+
+
         setInput('');
     };
 
