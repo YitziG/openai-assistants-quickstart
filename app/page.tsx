@@ -18,9 +18,28 @@ export default function Home() {
 
     return (
         <div className="flex flex-col items-center justify-center h-screen">
-            <div className="inputForm">
+            <div className="chatContainer w-full max-w-2xl flex-grow overflow-y-auto">
+                <div className="messages">
+                    {messages.map((message, index) => (
+                        <div key={message.id} className="flex flex-col gap-1 border-b p-2">
+                            {message.status && (
+                                <div className="streamingStatus">
+                                    {message.status}
+                                </div>
+                            )}
+                            {message.text && (
+                                <div className="streamingText">
+                                    {message.text}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="inputForm w-full max-w-2xl flex justify-center items-center mt-4">
                 <input
-                    className="input"
+                    className="input flex-grow"
                     value={input}
                     onChange={event => setInput(event.target.value)}
                     placeholder="Ask a question"
@@ -31,28 +50,11 @@ export default function Home() {
                     }}
                 />
                 <button
-                    className="button"
+                    className="button ml-2"
                     onClick={handleSubmission}
                 >
                     Send
                 </button>
-            </div>
-
-            <div className="messages">
-                {messages.map(message => (
-                    <div key={message.id} className="flex flex-col gap-1">
-                        {message.status && (
-                            <div className="streamingStatus">
-                                {message.status}
-                            </div>
-                        )}
-                        {message.text && (
-                            <div className="streamingText">
-                                {message.text}
-                            </div>
-                        )}
-                    </div>
-                ))}
             </div>
         </div>
     );

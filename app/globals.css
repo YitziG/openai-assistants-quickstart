@@ -1,4 +1,10 @@
-/* Center the entire page content */
+/* Basic reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   background-color: #121212;
   color: #e0e0e0;
@@ -8,21 +14,49 @@ body {
   align-items: center;
   height: 100vh;
   margin: 0;
+  padding: 0;
 }
 
-/* Update .inputForm for consistent centering */
+/* Container for the chat history */
+.chatContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 70%;
+  overflow-y: auto;
+  padding: 12px;
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  margin-bottom: 12px;
+}
+
+/* Styling for each message */
+.messages {
+  padding: 12px;
+  background-color: #333333;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Styling for streaming status */
+.streamingStatus {
+  color: #ffcc00;  /* Bright color for status updates */
+  font-size: 0.85em;
+  font-weight: bold;
+}
+
+/* Enhanced chat input styling */
 .inputForm {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  width: 100%;
+  padding: 12px;
   background-color: #1e1e1e;
-  padding: 12px 20px;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  gap: 8px; /* Spacing between input and button */
 }
 
-/* Adjusting the input field and button */
 .input {
   background-color: #333333;
   border: none;
@@ -30,7 +64,7 @@ body {
   padding: 10px 16px;
   color: #e0e0e0;
   outline: none;
-  width: 300px; /* Adjust the width of the input field */
+  flex-grow: 1;
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
 }
 
@@ -42,33 +76,9 @@ body {
   color: white;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  margin-left: 8px;
 }
 
 .button:hover {
   background-color: #005bb5;
-}
-
-/* Update message box styling */
-.messages {
-  background-color: #1e1e1e;
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-  max-width: 600px;
-  margin-top: 20px;
-}
-
-.streamingStatus, .streamingText {
-  background-color: #333333;
-  padding: 12px;
-  margin-bottom: 8px;
-  border-radius: 8px;
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-  color: #e0e0e0;
-  font-size: 0.9em;
-}
-
-.streamingStatus {
-  color: #ffcc00;  /* Bright color for status updates */
-  font-weight: bold;
 }
