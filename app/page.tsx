@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { submitMessage } from './actions';
+import { generateId } from 'ai';
 
 const StatusIndicator = ({ status }) => {
     const getStatusColor = () => {
@@ -54,32 +55,31 @@ export default function Home() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!input.trim()) return;
-
-        const userMessageId = Date.now();
-        const assistantMessageId = userMessageId + 1;
+        // const assistantMessageId = userMessageId + 1;
+        const userMessageId = generateId();
 
         setMessages(prev => [
             ...prev,
-            { role: 'user', text: input, id: userMessageId },
-            { role: 'assistant', status: 'in_progress', id: assistantMessageId }
+            { role: 'user', text: input, id: userMessageId }
+            // { role: 'assistant', status: 'in_progress', id: assistantMessageId }
         ]);
         setInput('');
 
         try {
-            const response = await submitMessage(input);
+            const {id, status, text, gui} = await submitMessage(input);
+            setMessages(prev => [
+                ...prev,
+                { role: 'assistant', text, id, status, gui }
+                // { role: 'assistant', status: 'in_progress', id: assistantMessageId }
+            ]);
 
-            setMessages(currentMessages =>
-                currentMessages.map(msg =>
-                    msg.id === assistantMessageId
-                        ? { ...msg, ...response }
-                        : msg
-                )
-            );
+            
+
         } catch (error) {
             console.error('Error submitting message:', error);
             setMessages(currentMessages =>
                 currentMessages.map(msg =>
-                    msg.id === assistantMessageId
+                    msg.id === generateId()
                         ? { ...msg, status: 'failed', text: "An error occurred. Please try again." }
                         : msg
                 )
