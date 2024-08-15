@@ -4,7 +4,9 @@ import Warnings from "./components/warnings";
 import { assistantId } from "./assistant-config";
 import { UserProvider } from "@auth0/nextjs-auth0/client";
 import CanvasComponent from "@/app/components/CanvasComponent";
-import { AI } from "./actions";  // Import the AI component
+import { AI } from "./actions"; // Import the AI component
+import { Dialog, DialogTrigger, DialogContent } from "@radix-ui/react-dialog";
+import { ChatCircleDots } from "phosphor-react";
 
 const inter = Inter({ subsets: ["latin"] });
 

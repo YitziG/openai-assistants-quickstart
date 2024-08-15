@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -12,5 +16,5 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden; /* Added to disable scrolling */
+  overflow: hidden;
 }

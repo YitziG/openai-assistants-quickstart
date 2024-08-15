@@ -1,42 +1,28 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import { Dialog, DialogTrigger, DialogContent } from '@radix-ui/react-dialog';
+import { ChatCircleDots } from 'phosphor-react';
+import { useState, useRef, useEffect } from 'react';
 import { submitMessage } from './actions';
-import { generateId } from 'ai';
 
 const StatusIndicator = ({ status }) => {
     const getStatusColor = () => {
         switch (status) {
             case 'in_progress':
-                return '#4CAF50';
+                return 'text-yellow-500';
             case 'completed':
-                return '#2196F3';
+                return 'text-green-500';
             case 'failed':
-                return '#F44336';
+                return 'text-red-500';
             default:
-                return '#9E9E9E';
+                return 'text-gray-400';
         }
     };
 
     return (
-        <div style={{ display: 'flex', alignItems: 'center', marginRight: '8px' }}>
-            <svg width="16" height="16" viewBox="0 0 16 16">
-                <circle cx="8" cy="8" r="7" fill="none" stroke={getStatusColor()} strokeWidth="2">
-                    {status === 'in_progress' && (
-                        <animateTransform
-                            attributeName="transform"
-                            type="rotate"
-                            from="0 8 8"
-                            to="360 8 8"
-                            dur="1s"
-                            repeatCount="indefinite"
-                        />
-                    )}
-                </circle>
-            </svg>
-            <span style={{ marginLeft: '4px', fontSize: '12px', color: getStatusColor() }}>
-        {status}
-      </span>
+        <div className={`flex items-center mr-2 ${getStatusColor()}`}>
+            <ChatCircleDots size={20} weight="fill" />
+            <span className="ml-2 text-sm">{status}</span>
         </div>
     );
 };
@@ -55,31 +41,25 @@ export default function Home() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!input.trim()) return;
-        // const assistantMessageId = userMessageId + 1;
-        const userMessageId = generateId();
+        const userMessageId = Date.now(); // Replacing generateId temporarily
 
         setMessages(prev => [
             ...prev,
             { role: 'user', text: input, id: userMessageId }
-            // { role: 'assistant', status: 'in_progress', id: assistantMessageId }
         ]);
         setInput('');
 
         try {
-            const {id, status, text, gui} = await submitMessage(input);
+            const { id, status, text } = await submitMessage(input); // Assuming submitMessage is defined elsewhere
             setMessages(prev => [
                 ...prev,
-                { role: 'assistant', text, id, status, gui }
-                // { role: 'assistant', status: 'in_progress', id: assistantMessageId }
+                { role: 'assistant', text, id, status }
             ]);
-
-            
-
         } catch (error) {
             console.error('Error submitting message:', error);
             setMessages(currentMessages =>
                 currentMessages.map(msg =>
-                    msg.id === generateId()
+                    msg.id === userMessageId
                         ? { ...msg, status: 'failed', text: "An error occurred. Please try again." }
                         : msg
                 )
@@ -88,60 +68,38 @@ export default function Home() {
     };
 
     return (
-        <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100vh',
-            backgroundColor: '#1a1a1a',
-            color: 'white'
-        }}>
-            <h1 style={{padding: '1rem', backgroundColor: '#2a2a2a', margin: 0, textAlign: 'center'}}>AI Assistant</h1>
-            <div style={{flexGrow: 1, overflowY: 'auto', padding: '1rem'}}>
+        <div className="flex flex-col h-screen bg-gray-900 text-white">
+            <h1 className="p-4 bg-gray-800 text-center text-xl">AI Assistant</h1>
+            <div className="flex-grow overflow-y-auto p-4">
                 {messages.map((message) => (
-                    <div key={message.id}
-                         style={{
-                             marginBottom: '1rem',
-                             display: 'flex',
-                             justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start'
-                         }}>
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '1rem',
-                            backgroundColor: message.role === 'user' ? '#0066cc' : '#2a2a2a',
-                            maxWidth: '70%'
-                        }}>
+                    <div
+                        key={message.id}
+                        className={`flex mb-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                        <div
+                            className={`flex flex-col p-4 rounded-lg max-w-md ${
+                                message.role === 'user' ? 'bg-blue-600' : 'bg-gray-700'
+                            }`}
+                        >
                             {message.role === 'assistant' && <StatusIndicator status={message.status} />}
-                            <span>
-                {message.text || (message.status === 'in_progress' ? 'Processing your request...' : '')}
-              </span>
+                            <span>{message.text || (message.status === 'in_progress' ? 'Processing your request...' : '')}</span>
                         </div>
                     </div>
                 ))}
-                <div ref={messagesEndRef}/>
+                <div ref={messagesEndRef} />
             </div>
-            <form onSubmit={handleSubmit} style={{display: 'flex', padding: '1rem', backgroundColor: '#2a2a2a'}}>
+            <form onSubmit={handleSubmit} className="flex p-4 bg-gray-800">
                 <input
-                    style={{
-                        flexGrow: 1,
-                        padding: '0.5rem',
-                        borderRadius: '0.5rem 0 0 0.5rem',
-                        border: 'none',
-                        backgroundColor: '#3a3a3a',
-                        color: 'white'
-                    }}
+                    className="flex-grow mr-2 bg-gray-700 text-white rounded-md p-2"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="Type your message..."
                 />
-                <button type="submit" style={{
-                    padding: '0.5rem 1rem',
-                    borderRadius: '0 0.5rem 0.5rem 0',
-                    border: 'none',
-                    backgroundColor: '#0066cc',
-                    color: 'white'
-                }}>Send
+                <button
+                    className="bg-blue-600 text-white rounded-md px-4"
+                    type="submit"
+                >
+                    Send
                 </button>
             </form>
         </div>
