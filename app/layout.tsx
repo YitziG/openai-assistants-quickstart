@@ -1,5 +1,9 @@
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
+
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { cn } from '@/lib/utils'
 import Warnings from "./components/warnings";
 import { assistantId } from "./assistant-config";
 import { UserProvider } from "@auth0/nextjs-auth0/client";
@@ -18,15 +22,26 @@ export const metadata = {
   },
 };
 
+export const viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: 'white' },
+    { media: '(prefers-color-scheme: dark)', color: 'black' }
+  ]
+}
+
 export default function RootLayout({ children }) {
   return (
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
       <UserProvider>
-        <body className={inter.className}>
+        <body className={cn(
+            'font-sans antialiased',
+            GeistSans.variable,
+            GeistMono.variable
+        )}>
           {/* <CanvasComponent /> */}
-          <div className="content">
+          <div className="flex flex-col min-h-screen">
             <AI>
-              <main>{assistantId ? children : <Warnings />}</main>
+              <main className="flex flex-col flex-1 bg-muted/50">{assistantId ? children : <Warnings />}</main>
             </AI>
           </div>
         </body>
