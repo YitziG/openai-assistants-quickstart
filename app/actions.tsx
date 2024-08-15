@@ -1,5 +1,6 @@
 "use server";
 
+import {config} from './config';
 import { generateId } from "ai";
 import { createAI, createStreamableUI, createStreamableValue } from "ai/rsc";
 import { OpenAI } from "openai";
@@ -39,7 +40,7 @@ import {
 import {ReactNode} from "react";
 
 const openai = new OpenAI({
-    apiKey: "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",
+    apiKey: config.OPENAI_API_KEY,
 });
 
 export interface ClientMessage {
@@ -49,7 +50,7 @@ export interface ClientMessage {
     gui: ReactNode;
 }
 
-const ASSISTANT_ID = 'asst_iAplfT42LQ1Nbdk06g1BfEMU';
+const ASSISTANT_ID =  config.OPENAI_ASSISTANT_ID;
 let THREAD_ID = '';
 let RUN_ID = '';
 
