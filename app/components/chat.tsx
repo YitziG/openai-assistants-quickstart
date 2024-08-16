@@ -66,7 +66,7 @@ const borderStyles = cva(
             <Robot size={24} weight="fill" className="text-secondary mr-2 mt-1" />
             <div className="bg-secondary text-secondary-foreground rounded-lg py-2 px-4 max-w-[80%]">
                 <Markdown>{text}</Markdown>
-                {isTyping && <TypingIndicator state={state} />}
+                {/* {isTyping && <TypingIndicator state={state} />} */}
             </div>
         </div>
     );
@@ -409,12 +409,12 @@ const Chat = ({
     return (
         <Card className={`w-full h-[70vh] flex flex-col  ${borderStyles({ state: mapAssistantStateToBorderState(assistantState) })}`}>
             <CardHeader className="py-3">
-                <div className="flex items-center">
+                {/* <div className="flex items-center">
                     <CircleIcon 
                         className={`h-4 w-4 mr-2 ${threadReady ? 'text-green-500' : 'text-red-500'}`} 
                         fill={threadReady ? 'currentColor' : 'none'} 
                     />
-                </div>
+                </div> */}
             </CardHeader>
             <CardContent className="flex-grow overflow-hidden">
                 <ScrollArea className="h-full pr-4">
@@ -438,7 +438,7 @@ const Chat = ({
                 </ScrollArea>
             </CardContent>
 
-            <CardFooter className="flex flex-col space-y-4 py-3">
+            <CardFooter className="flex flex-col space-y-4 py-6">
                 <form
                     onSubmit={handleSubmit}
                     className="flex w-full space-x-2"
