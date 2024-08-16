@@ -1,18 +1,13 @@
+import { ThemeProvider } from "@/app/components/theme-provider"
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
-
-import { Inter } from "next/font/google";
-import "./globals.css";
+import { Inter } from "next/font/google"
+import "./globals.css"
 import { cn } from '@/lib/utils'
-import Warnings from "./components/warnings";
-import { assistantId } from "./assistant-config";
-import { UserProvider } from "@auth0/nextjs-auth0/client";
-import CanvasComponent from "@/app/components/CanvasComponent";
-import { AI } from "./actions"; // Import the AI component
-import { Dialog, DialogTrigger, DialogContent } from "@radix-ui/react-dialog";
-import { ChatCircleDots } from "phosphor-react";
+import { UserProvider } from "@auth0/nextjs-auth0/client"
+import { AI } from "./actions"
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
   title: "Yafutzu - Empowering Intelligence",
@@ -20,7 +15,7 @@ export const metadata = {
   icons: {
     icon: "/yafutzu-icon.svg",
   },
-};
+}
 
 export const viewport = {
   themeColor: [
@@ -31,15 +26,18 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-      <html lang="en" suppressHydrationWarning>
-      <UserProvider>
-        <body className={inter.className}>
-          {/* <CanvasComponent /> */}
-            <AI>
-              {assistantId ? children : <Warnings/>}
-            </AI>
-        </body>
-      </UserProvider>
-      </html>
-  );
+    <html lang="en" suppressHydrationWarning>
+      <body className={cn("min-h-screen bg-background font-sans antialiased", GeistSans.className)}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <UserProvider>
+            <div className="relative flex min-h-screen flex-col">
+              <div className="flex-1">
+                <AI>{children}</AI>
+              </div>
+            </div>
+          </UserProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  )
 }
