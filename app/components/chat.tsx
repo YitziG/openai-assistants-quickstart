@@ -4,24 +4,36 @@ import React, {useEffect, useRef, useState} from "react";
 import styles from "./chat.module.css";
 import {AssistantStream} from "openai/lib/AssistantStream";
 import Markdown from "react-markdown";
-import {useUser} from "@auth0/nextjs-auth0/client";
-import {RequiredActionFunctionToolCall} from "openai/resources/beta/threads/runs/runs";
-
 // @ts-expect-error - no types for this yet
 import {AssistantStreamEvent} from "openai/resources/beta/assistants/assistants";
+import {RequiredActionFunctionToolCall} from "openai/resources/beta/threads/runs/runs";
 
 type MessageProps = {
     role: "user" | "assistant" | "code";
     text: string;
+    status?: string;
 };
 
 const UserMessage = ({text}: { text: string }) => {
     return <div className={styles.userMessage}>{text}</div>;
 };
 
-const AssistantMessage = ({text}: { text: string }) => {
+// const AssistantMessage = ({ text }: { text: string }) => {
+//     return (
+//         <div className={styles.assistantMessage}>
+//             <Markdown>{text}</Markdown>
+//         </div>
+//     );
+// };
+
+// New AssistantMessage component that handles message text and status
+const AssistantMessage = ({text, status}: { text: string, status: string }) => {
     return (
         <div className={styles.assistantMessage}>
+            <div
+                className={status === "success" ? styles.success : styles.error}>
+                {status}
+            </div>
             <Markdown>{text}</Markdown>
         </div>
     );
@@ -40,12 +52,12 @@ const CodeMessage = ({text}: { text: string }) => {
     );
 };
 
-const Message = ({role, text}: MessageProps) => {
+const Message = ({role, text, status}: MessageProps) => {
     switch (role) {
         case "user":
             return <UserMessage text={text}/>;
         case "assistant":
-            return <AssistantMessage text={text}/>;
+            return <AssistantMessage text={text} status={status}/>;
         case "code":
             return <CodeMessage text={text}/>;
         default:
@@ -69,19 +81,9 @@ const Chat = ({
 
     // automatically scroll to bottom of chat
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
-    const {user} = useUser();
-
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({behavior: "smooth"});
     };
-
-    const updateRateLimitData = () => {
-        const currentTime = Date.now().toString();
-        const currentCount = parseInt(localStorage.getItem("messageCount") || "0");
-        localStorage.setItem("lastMessageTime", currentTime);
-        localStorage.setItem("messageCount", (currentCount + 1).toString());
-    };
-
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
@@ -95,58 +97,23 @@ const Chat = ({
             const data = await res.json();
             setThreadId(data.threadId);
         };
-        createThread().then((r) => r);
+        createThread();
     }, []);
 
-    const sendMessage = async (text: string) => {
-        try {
-            const response = await fetch(
-                `/api/assistants/threads/${threadId}/messages`,
-                {
-                    method: "POST",
-                    body: JSON.stringify({
-                        content: text,
-                    }),
-                }
-            );
-
-            if (response.status === 429) {
-                const retryAfter = parseFloat(
-                    response.headers.get("Retry-After") || "0"
-                );
-                const message = `Please wait ${retryAfter.toFixed(
-                    1
-                )} seconds before sending your next message.`;
-
-                setMessages((prevMessages) => [
-                    ...prevMessages,
-                    {role: "assistant", text: message},
-                ]);
-                setInputDisabled(true);
-
-                console.log(
-                    "Rate limit exceeded. Please try again later. Response:",
-                    response
-                );
-
-                return;
+    const sendMessage = async (text) => {
+        const response = await fetch(
+            `/api/assistants/threads/${threadId}/messages`,
+            {
+                method: "POST",
+                body: JSON.stringify({
+                    content: text,
+                }),
             }
+        );
 
-            console.log("Message sent successfully, respones:", response);
 
-            const stream = AssistantStream.fromReadableStream(response.body);
-            handleReadableStream(stream);
-        } catch (error) {
-            console.error("Error sending message:", error);
-            setMessages((prevMessages) => [
-                ...prevMessages,
-                {
-                    role: "assistant",
-                    text: "An error occurred. Please try again later.",
-                },
-            ]);
-            setInputDisabled(false);
-        }
+        const stream = AssistantStream.fromReadableStream(response.body);
+        handleReadableStream(stream);
     };
 
     const submitActionResult = async (runId, toolCallOutputs) => {
@@ -192,6 +159,7 @@ const Chat = ({
         if (delta.value != null) {
             appendToLastMessage(delta.value);
         }
+        ;
         if (delta.annotations != null) {
             annotateLastMessage(delta.annotations);
         }
@@ -200,7 +168,7 @@ const Chat = ({
     // imageFileDone - show image in chat
     const handleImageFileDone = (image) => {
         appendToLastMessage(`\n![${image.file_id}](/api/files/${image.file_id})\n`);
-    };
+    }
 
     // toolCallCreated - log new tool call
     const toolCallCreated = (toolCall) => {
@@ -251,31 +219,50 @@ const Chat = ({
 
         // events without helpers yet (e.g. requires_action and run.done)
         stream.on("event", (event) => {
-            if (event.event === "thread.run.requires_action")
-                handleRequiresAction(event);
-            if (event.event === "thread.run.completed") handleRunCompleted();
+            switch (event.event) {
+                case "thread.run.requires_action":
+                    handleRequiresAction(event);
+                    break;
+                case "thread.run.completed":
+                    appendToLastMessage("", "success");
+                    handleRunCompleted();
+                    break;
+                case "thread.run.in_progress":
+                    appendToLastMessage("", "In Progress");
+                    break;
+                case "thread.run.queued":
+                    appendToLastMessage("", "Queued");
+                    break;
+                // Add more event cases as needed
+                default:
+                    console.log("Unhandled event:", event);
+                    break;
+            }
         });
     };
 
     /*
-        =======================
-        === Utility Helpers ===
-        =======================
-      */
+      =======================
+      === Utility Helpers ===
+      =======================
+    */
 
-    const appendToLastMessage = (text) => {
+    const appendToLastMessage = (text, status = null) => {
         setMessages((prevMessages) => {
             const lastMessage = prevMessages[prevMessages.length - 1];
             const updatedLastMessage = {
                 ...lastMessage,
                 text: lastMessage.text + text,
             };
+            if (status !== null) {
+                updatedLastMessage.status = status;
+            }
             return [...prevMessages.slice(0, -1), updatedLastMessage];
         });
     };
 
-    const appendMessage = (role, text) => {
-        setMessages((prevMessages) => [...prevMessages, {role, text}]);
+    const appendMessage = (role, text, status = "") => {
+        setMessages((prevMessages) => [...prevMessages, {role, text, status}]);
     };
 
     const annotateLastMessage = (annotations) => {
@@ -285,30 +272,23 @@ const Chat = ({
                 ...lastMessage,
             };
             annotations.forEach((annotation) => {
-                if (annotation.type === "file_path") {
+                if (annotation.type === 'file_path') {
                     updatedLastMessage.text = updatedLastMessage.text.replaceAll(
                         annotation.text,
                         `/api/files/${annotation.file_path.file_id}`
                     );
                 }
-            });
+            })
             return [...prevMessages.slice(0, -1), updatedLastMessage];
         });
-    };
+
+    }
 
     return (
         <div className={styles.chatContainer}>
             <div className={styles.messages}>
                 {messages.map((msg, index) => (
-                    <div key={index} className={
-                        msg.role === "user"
-                            ? styles.userMessage
-                            : msg.role === "assistant"
-                                ? styles.assistantMessage
-                                : styles.codeMessage
-                    }>
-                        <Message role={msg.role} text={msg.text}/>
-                    </div>
+                    <Message key={index} role={msg.role} text={msg.text} status={msg.status}/>
                 ))}
                 <div ref={messagesEndRef}/>
             </div>
@@ -321,26 +301,16 @@ const Chat = ({
                     className={styles.input}
                     value={userInput}
                     onChange={(e) => setUserInput(e.target.value)}
-                    placeholder="Hi, I'm Yafutzu. How can I help you today?"
-                    // pre fill the input with a "hello" message.
-                    // value={userInput || "hello"}
+                    placeholder="Enter your question"
                 />
-                {/*<button*/}
-                {/*    type="submit"*/}
-                {/*    className={styles.button}*/}
-                {/*    disabled={inputDisabled}*/}
-                {/*>*/}
-                {/*    Send*/}
-                {/*</button>*/}
+                <button
+                    type="submit"
+                    className={styles.button}
+                    disabled={inputDisabled}
+                >
+                    Send
+                </button>
             </form>
-            {!user && messages.length >= 5 && (
-                <div className={styles.signUpPrompt}>
-                    <p>Sign up for unlimited access!</p>
-                    <a href="/api/auth/login" className={styles.signUpButton}>
-                        Sign Up
-                    </a>
-                </div>
-            )}
         </div>
     );
 };

@@ -29,6 +29,7 @@ export async function POST(
   request: NextRequest,
   { params: { threadId } }: { params: { threadId: string } }
 ) {
+  console.log("POST /api/assistants/threads/[threadId]/messages");
   try {
     if (!threadId) {
       return NextResponse.json(

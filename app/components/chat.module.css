@@ -1,67 +1,55 @@
 .chatContainer {
-    position: relative;
-    height: 100vh;
-    width: 60vh;
-    background-color: transparent;
+    display: flex;
+    flex-direction: column-reverse;
+    height: 100%;
+    width: 100%;
 }
 
 .inputForm {
-    position: absolute;
-    top: 73%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 65%;
+    width: 100%;
+    padding: 10px;
+    padding-bottom: 40px;
+    order: 1;
 }
 
 .input {
-    flex: 1;
-    padding: 10px;
+    flex-grow: 1;
+    padding: 16px 24px;
     margin-right: 10px;
-    width: 40%;
-    height: 30px;
-    border: 2px solid #fff;
-    border-radius: 30px;
-    background-color: rgba(0, 0, 0, 0.5);
-    color: #fff;
-    font-size: 16px;
-    text-align: center;
+    border-radius: 60px;
+    border: 2px solid transparent;
+    font-size: 1em;
+    background-color: #efefef;
+}
+
+.input:focus {
+    outline: none !important;
+    border-color: #000;
+    background-color: white;
 }
 
 .button {
-    padding: 10px 20px;
-    border: 2px solid #fff;
-    border-radius: 5px;
-    background-color: rgba(0, 0, 0, 0.7);
-    color: #fff;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.button:hover {
-    background-color: rgba(0, 0, 0, 0.9);
-    border: 2px solid #ccc;
+    padding: 8px 24px;
+    background-color: #000;
+    color: white;
+    border: none;
+    font-size: 1em;
+    border-radius: 60px; /* Removed duplicate border-radius property */
 }
 
 .button:disabled {
-    background-color: rgba(100, 100, 100, 0.7);
-    cursor: not-allowed;
+    background-color: lightgrey;
 }
 
 .messages {
-    flex: 1;
-    width: 100%;
+    flex-grow: 1;
     overflow-y: auto;
     padding: 10px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 10px;
-    color: #fff;
-    margin-bottom: 20px;
     display: flex;
     flex-direction: column;
+    order: 2;
+    white-space: pre-wrap;
 }
 
 .userMessage,
@@ -69,58 +57,46 @@
 .codeMessage {
     margin: 8px 0;
     padding: 8px 16px;
+    align-self: flex-start;
     border-radius: 15px;
     max-width: 80%;
     overflow-wrap: break-word;
 }
 
+.assistantMessage img {
+    max-width: 100%;
+    margin: 8px 0px 8px 0px;
+    border-radius: 8px;
+}
+
 .userMessage {
     align-self: flex-end;
     color: #fff;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: #000;
 }
 
 .assistantMessage {
-    align-self: flex-start;
-    background-color: rgba(255, 255, 255, 0.8);
-    color: #000;
+    background-color: #efefef;
 }
 
 .codeMessage {
-    align-self: flex-start;
     padding: 10px 16px;
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: #e9e9e9;
     font-family: monospace;
-    color: #000;
+    counter-reset: line;
 }
 
-.input:focus {
-    outline: none !important;
-    border-color: #000;
+.codeMessage > div {
+    margin-top: 4px;
 }
 
-.signUpPrompt {
-    margin-top: 20px;
-    text-align: center;
-    color: #fff;
+.codeMessage span {
+    color: #b8b8b8;
+    margin-right: 8px;
 }
 
-.signUpButton {
-    display: inline-block;
-    padding: 10px 20px;
-    margin-top: 10px;
-    border: 2px solid #fff;
-    border-radius: 5px;
-    background-color: rgba(0, 0, 0, 0.7);  /* Semi-transparent background */
-    color: #fff;  /* White text color */
-    text-decoration: none;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;  /* Smooth transition for hover effect */
-}
-
-/* Sign up button hover effect */
-.signUpButton:hover {
-    background-color: rgba(0, 0, 0, 0.9);
-    border: 2px solid #ccc;  /* Slightly lighter border on hover */
+.statusIndicator {
+    font-size: 0.8em;
+    color: gray;
+    margin-bottom: 0.5em;
 }

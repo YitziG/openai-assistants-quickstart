@@ -33,17 +33,11 @@ export default function RootLayout({ children }) {
   return (
       <html lang="en" suppressHydrationWarning>
       <UserProvider>
-        <body className={cn(
-            'font-sans antialiased',
-            GeistSans.variable,
-            GeistMono.variable
-        )}>
+        <body className={inter.className}>
           {/* <CanvasComponent /> */}
-          <div className="flex flex-col min-h-screen">
             <AI>
-              <main className="flex flex-col flex-1 bg-muted/50">{assistantId ? children : <Warnings />}</main>
+              {assistantId ? children : <Warnings/>}
             </AI>
-          </div>
         </body>
       </UserProvider>
       </html>

@@ -54,6 +54,8 @@ const ASSISTANT_ID =  config.OPENAI_ASSISTANT_ID;
 let THREAD_ID = '';
 let RUN_ID = '';
 
+//TODO we should move submitMessage to a route.ts and call it accordingly so we can rate limit it
+
 export async function submitMessage(question: string): Promise<ClientMessage> {
     const status = createStreamableUI('thread.init');
     const textStream = createStreamableValue('');
