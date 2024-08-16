@@ -89,7 +89,9 @@ const Chat = ({
     };
 
     useEffect(() => {
-        scrollToBottom();
+        if (messages.length > 0) {
+            scrollToBottom();
+        }
     }, [messages]);
 
     // Create a new thread when the component mounts
