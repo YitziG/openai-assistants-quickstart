@@ -13,33 +13,101 @@ import Markdown from "react-markdown";
 import { AssistantStreamEvent } from "openai/resources/beta/assistants/assistants";
 import { RequiredActionFunctionToolCall } from "openai/resources/beta/threads/runs/runs";
 import { EventLog } from "@/app/components/event-log"; // Import EventLog component
+import { cva } from "class-variance-authority";
+import { User, Robot, DotsThree, CheckCircle, Brain, Keyboard } from "@phosphor-icons/react";
+
+
+
+
+import { CircleIcon, Loader2 } from "lucide-react";
 
 type MessageProps = {
     role: "user" | "assistant" | "code";
     text: string;
-    status?: string;
 };
 
 const UserMessage = ({ text }: { text: string }) => {
     return (
-        <div className="flex justify-end mb-4">
-            <div className="bg-primary text-primary-foreground rounded-lg py-2 px-4 max-w-[80%]">
+        <div className="flex justify-end mb-4 items-start">
+            <div className="bg-primary text-primary-foreground rounded-lg py-2 px-4 max-w-[80%] mr-2">
                 {text}
+            </div>
+            <User size={24} weight="fill" className="text-primary mt-1" />
+        </div>
+    );
+};
+
+const borderStyles = cva(
+    "transition-colors duration-300 border-2",
+    {
+      variants: {
+        state: {
+          ready: "border-green-500",
+          thinking: "border-yellow-500",
+          creating_text: "border-blue-500",
+          updating_text: "border-blue-300",
+          processing_image: "border-purple-500",
+          executing_code: "border-orange-500",
+          queued: "border-gray-500",
+        },
+      },
+      defaultVariants: {
+        state: "ready",
+      },
+    }
+  );
+
+  type AssistantState = "received" | "read" | "thinking" | "typing";
+
+
+  const AssistantMessage = ({ text, isTyping, state }: { text: string; isTyping: boolean; state: AssistantState }) => {
+    return (
+        <div className="flex mb-4 items-start">
+            <Robot size={24} weight="fill" className="text-secondary mr-2 mt-1" />
+            <div className="bg-secondary text-secondary-foreground rounded-lg py-2 px-4 max-w-[80%]">
+                <Markdown>{text}</Markdown>
+                {isTyping && <TypingIndicator state={state} />}
             </div>
         </div>
     );
 };
 
-// AssistantMessage component that handles message text and status with error handling
-const AssistantMessage = ({ text, status }: { text: string; status: string }) => {
+const TypingIndicator = ({ state }: { state: AssistantState }) => {
+    const getStateIcon = () => {
+        switch (state) {
+            case "received":
+                return <CheckCircle className="mr-2 h-4 w-4" />;
+            case "read":
+                return <CheckCircle className="mr-2 h-4 w-4 text-blue-500" />;
+            case "thinking":
+                return <Brain className="mr-2 h-4 w-4 animate-pulse" />;
+            case "typing":
+                return <Keyboard className="mr-2 h-4 w-4 animate-bounce" />;
+            default:
+                return null;
+        }
+    };
+
+    const getStateText = () => {
+        switch (state) {
+            case "received":
+                return "Received";
+            case "read":
+                return "Read";
+            case "thinking":
+                return "Thinking...";
+            case "typing":
+                return "Typing...";
+            default:
+                return "";
+        }
+    };
+
     return (
-        <div className="flex mb-4">
-            <div className="bg-secondary text-secondary-foreground rounded-lg py-2 px-4 max-w-[80%]">
-                <div className={status === "success" ? "text-green-500" : "text-red-500"}>
-                    {status}
-                </div>
-                <Markdown>{text}</Markdown>
-            </div>
+        <div className="flex items-center mt-2 text-sm text-muted-foreground">
+            {getStateIcon()}
+            <span className="ml-1 capitalize">{getStateText()}</span>
+            {state === "typing" && <DotsThree size={24} weight="bold" className="animate-bounce" />}
         </div>
     );
 };
@@ -54,12 +122,12 @@ const CodeMessage = ({ text }: { text: string }) => {
     );
 };
 
-const Message = ({ role, text, status }: MessageProps) => {
+const Message = ({ role, text }: MessageProps) => {
     switch (role) {
         case "user":
             return <UserMessage text={text} />;
         case "assistant":
-            return <AssistantMessage text={text} status={status} />;
+            return <AssistantMessage text={text} isTyping={false} state="received" />;
         case "code":
             return <CodeMessage text={text} />;
         default:
@@ -76,11 +144,15 @@ type ChatProps = {
 const Chat = ({
     functionCallHandler = () => Promise.resolve(""),
 }: ChatProps) => {
+    const [conversationState, setConversationState] = useState("ready");
+    const [isAssistantTyping, setIsAssistantTyping] = useState(false);
     const [userInput, setUserInput] = useState("");
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState<Array<{ role: string; text: string; state?: AssistantState }>>([]);
     const [inputDisabled, setInputDisabled] = useState(false);
     const [threadId, setThreadId] = useState("");
     const [logs, setLogs] = useState([]); // State for event logs
+    const [threadReady, setThreadReady] = useState(false);
+    const [assistantState, setAssistantState] = useState<AssistantState>("received");
 
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
     const inputRef = useRef<HTMLInputElement | null>(null); // Add this line
@@ -112,6 +184,7 @@ const Chat = ({
                 if (!res.ok) throw new Error("Failed to create thread");
                 const data = await res.json();
                 setThreadId(data.threadId);
+                setThreadReady(true);
             } catch (error) {
                 console.error("Error creating thread:", error);
             }
@@ -193,11 +266,27 @@ const Chat = ({
 
     // Handle stream events
     const handleReadableStream = (stream: AssistantStream) => {
-        stream.on("textCreated", handleTextCreated);
-        stream.on("textDelta", handleTextDelta);
-        stream.on("imageFileDone", handleImageFileDone);
-        stream.on("toolCallCreated", toolCallCreated);
-        stream.on("toolCallDelta", toolCallDelta);
+        stream.on("textCreated", () => {
+            setAssistantState("typing");
+            setIsAssistantTyping(true);
+            appendMessage("assistant", "", "typing");
+        });
+        stream.on("textDelta", (delta) => {
+            setIsAssistantTyping(true);
+            handleTextDelta(delta);
+        });
+        stream.on("imageFileDone", (image) => {
+            setConversationState("processing_image");
+            handleImageFileDone(image);
+        });
+        stream.on("toolCallCreated", (toolCall) => {
+            setConversationState("executing_code");
+            toolCallCreated(toolCall);
+        });
+        stream.on("toolCallDelta", (delta, snapshot) => {
+            setConversationState("executing_code");
+            toolCallDelta(delta, snapshot);
+        });
         stream.on("event", (event) => {
             console.log("Received event:", event);
             setLogs((prevLogs) => [
@@ -209,14 +298,14 @@ const Chat = ({
                     handleRequiresAction(event);
                     break;
                 case "thread.run.completed":
-                    appendToLastMessage("", "success");
+                    setIsAssistantTyping(false);
                     handleRunCompleted();
                     break;
                 case "thread.run.in_progress":
-                    appendToLastMessage("", "In Progress");
+                    setAssistantState("thinking");
                     break;
                 case "thread.run.queued":
-                    appendToLastMessage("", "Queued");
+                    setAssistantState("received");
                     break;
                 default:
                     console.log("Unhandled event:", event);
@@ -231,6 +320,7 @@ const Chat = ({
     // Re-enable input form after run completion
     const handleRunCompleted = () => {
         setInputDisabled(false);
+        setIsAssistantTyping(false);
     };
 
     // Append an empty assistant message when text creation begins
@@ -285,38 +375,64 @@ const Chat = ({
         appendToLastMessage(delta.code_interpreter.input);
     };
 
-    const appendToLastMessage = (text, status = null) => {
+    const appendToLastMessage = (text, state: AssistantState | null = null) => {
         setMessages((prevMessages) => {
             const lastMessage = prevMessages[prevMessages.length - 1];
             const updatedLastMessage = {
                 ...lastMessage,
                 text: lastMessage.text + text,
+                state: state || lastMessage.state,
             };
-            if (status !== null) {
-                updatedLastMessage.status = status;
-            }
             return [...prevMessages.slice(0, -1), updatedLastMessage];
         });
     };
 
-    const appendMessage = (role, text, status = "") => {
-        setMessages((prevMessages) => [...prevMessages, { role, text, status }]);
+
+    const appendMessage = (role, text, state: AssistantState = "received") => {
+        setMessages((prevMessages) => [...prevMessages, { role, text, state }]);
     };
 
+    const mapAssistantStateToBorderState = (state: AssistantState): "thinking" | "ready" | "creating_text" | "updating_text" | "processing_image" | "executing_code" | "queued" => {
+        switch (state) {
+          case "received":
+          case "read":
+            return "ready";
+          case "thinking":
+            return "thinking";
+          case "typing":
+            return "creating_text";
+          default:
+            return "ready";
+        }
+      };
+
     return (
-        <Card className="w-full h-[70vh] flex flex-col">
+        <Card className={`w-full h-[70vh] flex flex-col  ${borderStyles({ state: mapAssistantStateToBorderState(assistantState) })}`}>
             <CardHeader className="py-3">
-                <CardTitle>Chat with Yafutzu</CardTitle>
+                <div className="flex items-center">
+                    <CircleIcon 
+                        className={`h-4 w-4 mr-2 ${threadReady ? 'text-green-500' : 'text-red-500'}`} 
+                        fill={threadReady ? 'currentColor' : 'none'} 
+                    />
+                </div>
             </CardHeader>
             <CardContent className="flex-grow overflow-hidden">
                 <ScrollArea className="h-full pr-4">
-                    {messages.map((msg, index) => (
-                        <Message
-                            key={index}
-                            role={msg.role}
-                            text={msg.text}
-                            status={msg.status}
-                        />
+                {messages.map((msg, index) => (
+                        msg.role === "assistant" ? (
+                            <AssistantMessage
+                                key={index}
+                                text={msg.text}
+                                isTyping={isAssistantTyping && index === messages.length - 1}
+                                state={msg.state || "received"}
+                            />
+                        ) : (
+                            <Message
+                                key={index}
+                                role={msg.role as "user" | "assistant" | "code"}
+                                text={msg.text}
+                            />
+                        )
                     ))}
                     <div ref={messagesEndRef} />
                 </ScrollArea>
@@ -339,7 +455,7 @@ const Chat = ({
                         Send
                     </Button>
                 </form>
-                <Collapsible className="w-full">
+                {/* <Collapsible className="w-full">
                     <CollapsibleTrigger asChild>
                         <Button variant="outline" size="sm" className="w-full">
                             Event Log
@@ -348,7 +464,7 @@ const Chat = ({
                     <CollapsibleContent className="mt-2">
                         <EventLog logs={logs} />
                     </CollapsibleContent>
-                </Collapsible>
+                </Collapsible> */}
             </CardFooter>
         </Card>
     );
