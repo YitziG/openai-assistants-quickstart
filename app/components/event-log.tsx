@@ -1,14 +1,31 @@
-const EventLog = ({ logs }) => {
-    return (
-        <div >
-            {logs.map((log, index) => (
-                <div key={index}>
-                    <strong>{log.event}: </strong>
-                    <pre>{JSON.stringify(log.data, null, 2)}</pre>
-                </div>
-            ))}
-        </div>
-    );
-};
+import * as React from "react"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
-export { EventLog };
+const EventLog = ({ logs }) => {
+  return (
+    <ScrollArea className="h-[300px] w-full rounded-md border p-4">
+      <Accordion type="single" collapsible className="w-full">
+        {logs.map((log, index) => (
+          <AccordionItem key={index} value={`item-${index}`}>
+            <AccordionTrigger className="text-sm">
+              {log.event}
+            </AccordionTrigger>
+            <AccordionContent>
+              <pre className="text-xs overflow-x-auto">
+                {JSON.stringify(log.data, null, 2)}
+              </pre>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </ScrollArea>
+  )
+}
+
+export { EventLog }

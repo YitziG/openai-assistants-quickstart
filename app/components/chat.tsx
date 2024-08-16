@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 import styles from "./chat.module.css";
 import { AssistantStream } from "openai/lib/AssistantStream";
@@ -82,6 +83,7 @@ const Chat = ({
     const [logs, setLogs] = useState([]); // State for event logs
 
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
+    const inputRef = useRef<HTMLInputElement | null>(null); // Add this line
 
     // Scroll to the bottom of the chat automatically
     const scrollToBottom = () => {
@@ -93,6 +95,12 @@ const Chat = ({
             scrollToBottom();
         }
     }, [messages]);
+
+    useEffect(() => {
+        if (inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, []);
 
     // Create a new thread when the component mounts
     useEffect(() => {
@@ -296,13 +304,12 @@ const Chat = ({
     };
 
     return (
-        <Card className="w-full">
-
-            <CardHeader>
+        <Card className="w-full h-[70vh] flex flex-col">
+            <CardHeader className="py-3">
                 <CardTitle>Chat with Yafutzu</CardTitle>
             </CardHeader>
-            <CardContent>
-                <ScrollArea className="h-[60vh] pr-4">
+            <CardContent className="flex-grow overflow-hidden">
+                <ScrollArea className="h-full pr-4">
                     {messages.map((msg, index) => (
                         <Message
                             key={index}
@@ -315,26 +322,34 @@ const Chat = ({
                 </ScrollArea>
             </CardContent>
 
-            <CardFooter>
-            <form
-                onSubmit={handleSubmit}
-                className="flex w-full space-x-2"
-            >
-                <Input
-                    type="text"
-                    value={userInput}
-                    onChange={(e) => setUserInput(e.target.value)}
-                    placeholder="Type your message..."
-                    className="flex-1"
-                />
-                <Button type="submit" disabled={inputDisabled}>
-                    Send
-                </Button>
-            </form>
+            <CardFooter className="flex flex-col space-y-4 py-3">
+                <form
+                    onSubmit={handleSubmit}
+                    className="flex w-full space-x-2"
+                >
+                    <Input
+                        type="text"
+                        value={userInput}
+                        onChange={(e) => setUserInput(e.target.value)}
+                        placeholder="Type your message..."
+                        className="flex-1"
+                        ref={inputRef}
+                    />
+                    <Button type="submit" disabled={inputDisabled}>
+                        Send
+                    </Button>
+                </form>
+                <Collapsible className="w-full">
+                    <CollapsibleTrigger asChild>
+                        <Button variant="outline" size="sm" className="w-full">
+                            Event Log
+                        </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-2">
+                        <EventLog logs={logs} />
+                    </CollapsibleContent>
+                </Collapsible>
             </CardFooter>
-            <div className="mt-4">
-                <EventLog logs={logs} />
-            </div>
         </Card>
     );
 };
