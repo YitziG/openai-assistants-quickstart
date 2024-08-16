@@ -1,11 +1,11 @@
 "use client";
 
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
-import React, { useEffect, useRef, useState } from "react";
 import styles from "./chat.module.css";
 import { AssistantStream } from "openai/lib/AssistantStream";
 import Markdown from "react-markdown";
@@ -20,30 +20,35 @@ type MessageProps = {
 };
 
 const UserMessage = ({ text }: { text: string }) => {
-    return <div className={styles.userMessage}>{text}</div>;
+    return (
+        <div className="flex justify-end mb-4">
+            <div className="bg-primary text-primary-foreground rounded-lg py-2 px-4 max-w-[80%]">
+                {text}
+            </div>
+        </div>
+    );
 };
 
 // AssistantMessage component that handles message text and status with error handling
 const AssistantMessage = ({ text, status }: { text: string; status: string }) => {
     return (
-        <div className={styles.assistantMessage}>
-            <div className={status === "success" ? styles.success : styles.error}>
-                {status}
+        <div className="flex mb-4">
+            <div className="bg-secondary text-secondary-foreground rounded-lg py-2 px-4 max-w-[80%]">
+                <div className={status === "success" ? "text-green-500" : "text-red-500"}>
+                    {status}
+                </div>
+                <Markdown>{text}</Markdown>
             </div>
-            <Markdown>{text}</Markdown>
         </div>
     );
 };
 
 const CodeMessage = ({ text }: { text: string }) => {
     return (
-        <div className={styles.codeMessage}>
-            {text.split("\n").map((line, index) => (
-                <div key={index}>
-                    <span>{`${index + 1}. `}</span>
-                    {line}
-                </div>
-            ))}
+        <div className="flex mb-4">
+            <pre className="bg-muted text-muted-foreground rounded-lg py-2 px-4 max-w-[80%] overflow-x-auto">
+                <code>{text}</code>
+            </pre>
         </div>
     );
 };
@@ -292,10 +297,10 @@ const Chat = ({
         <Card className="w-full">
 
             <CardHeader>
-                <CardTitle>Chat</CardTitle>
+                <CardTitle>Chat with Yafutzu</CardTitle>
             </CardHeader>
             <CardContent>
-                <ScrollArea className="h-[60vh]">
+                <ScrollArea className="h-[60vh] pr-4">
                     {messages.map((msg, index) => (
                         <Message
                             key={index}
@@ -304,6 +309,7 @@ const Chat = ({
                             status={msg.status}
                         />
                     ))}
+                    <div ref={messagesEndRef} />
                 </ScrollArea>
             </CardContent>
 
@@ -324,7 +330,7 @@ const Chat = ({
                 </Button>
             </form>
             </CardFooter>
-            <div className={styles.eventLogContainer}>
+            <div className="mt-4">
                 <EventLog logs={logs} />
             </div>
         </Card>
