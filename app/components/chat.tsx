@@ -10,7 +10,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import styles from "./chat.module.css";
 import { AssistantStream } from "openai/lib/AssistantStream";
 import Markdown from "react-markdown";
-import { AssistantStreamEvent } from "openai/resources/beta/assistants/assistants";
 import { RequiredActionFunctionToolCall } from "openai/resources/beta/threads/runs/runs";
 import { EventLog } from "@/app/components/event-log"; // Import EventLog component
 import { cva } from "class-variance-authority";
@@ -20,6 +19,8 @@ import { User, Robot, DotsThree, CheckCircle, Brain, Keyboard } from "@phosphor-
 
 
 import { CircleIcon, Loader2 } from "lucide-react";
+import {Beta} from "openai/resources";
+import AssistantStreamEvent = Beta.AssistantStreamEvent;
 
 type MessageProps = {
     role: "user" | "assistant" | "code";
