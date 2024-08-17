@@ -212,7 +212,7 @@ const Chat = ({
             // Re-enable input field on failure
             setInputDisabled(false);
             // Optionally, show an error message in the chat
-            appendMessage("assistant", "Error: Unable to send message", "error");
+            // appendMessage("assistant", "Error: Unable to send message", "");
         }
     };
 
