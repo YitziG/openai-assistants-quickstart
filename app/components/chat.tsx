@@ -5,20 +5,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
-import styles from "./chat.module.css";
 import { AssistantStream } from "openai/lib/AssistantStream";
 import Markdown from "react-markdown";
 import { RequiredActionFunctionToolCall } from "openai/resources/beta/threads/runs/runs";
-import { EventLog } from "@/app/components/event-log"; // Import EventLog component
+// import { EventLog } from "@/app/components/event-log"; // Import EventLog component
 import { cva } from "class-variance-authority";
 import { User, Robot, DotsThree, CheckCircle, Brain, Keyboard } from "@phosphor-icons/react";
 
-
-
-
-import { CircleIcon, Loader2 } from "lucide-react";
 import {AssistantStreamEvent} from "openai/resources/beta";
 
 type MessageProps = {

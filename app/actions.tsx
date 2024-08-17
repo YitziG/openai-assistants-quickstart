@@ -1,6 +1,5 @@
 "use server";
 
-import {config} from './config';
 import { generateId } from "ai";
 import { createAI, createStreamableUI, createStreamableValue } from "ai/rsc";
 import { OpenAI } from "openai";
@@ -8,39 +7,39 @@ import { Message } from "./components/message"; // Update path if necessary
 import {
     getSefariaCategory
 } from "./services/sefaria/category";
-import {
-    getAllDataForIndex
-} from "./services/sefaria/index";
-import {
-    getTopic
-} from "./services/sefaria/topics";
-import {
-    getTopicGraph
-} from "./services/sefaria/topics-graph";
-import {
-    getLearningSchedule
-} from "./services/sefaria/calendars";
-import {
-    getRecommendedTopics
-} from "./services/sefaria/recommendedTopics";
-import {
-    getLexiconEntry
-} from "./services/sefaria/words/word";
-import {
-    getTextShape
-} from "./services/sefaria/shape";
-import {
-    searchSefaria
-} from "./services/sefaria/search";
-import {
-    getSefariaText,
-    getRelated,
-    getCommentaryText
-} from "./services/sefaria/text";
+// import {
+//     getAllDataForIndex
+// } from "./services/sefaria/index";
+// import {
+//     getTopic
+// } from "./services/sefaria/topics";
+// import {
+//     getTopicGraph
+// } from "./services/sefaria/topics-graph";
+// import {
+//     getLearningSchedule
+// } from "./services/sefaria/calendars";
+// import {
+//     getRecommendedTopics
+// } from "./services/sefaria/recommendedTopics";
+// import {
+//     getLexiconEntry
+// } from "./services/sefaria/words/word";
+// import {
+//     getTextShape
+// } from "./services/sefaria/shape";
+// import {
+//     searchSefaria
+// } from "./services/sefaria/search";
+// import {
+//     getSefariaText,
+//     getRelated,
+//     getCommentaryText
+// } from "./services/sefaria/text";
 import {ReactNode} from "react";
 
 const openai = new OpenAI({
-    apiKey: config.OPENAI_API_KEY,
+    apiKey: process.env.OPENAI_API_KEY,
 });
 
 export interface ClientMessage {
@@ -50,7 +49,7 @@ export interface ClientMessage {
     gui: ReactNode;
 }
 
-const ASSISTANT_ID =  config.OPENAI_ASSISTANT_ID;
+const ASSISTANT_ID =  process.env.OPENAI_ASSISTANT_ID;
 let THREAD_ID = '';
 let RUN_ID = '';
 
