@@ -19,8 +19,7 @@ import { User, Robot, DotsThree, CheckCircle, Brain, Keyboard } from "@phosphor-
 
 
 import { CircleIcon, Loader2 } from "lucide-react";
-import {Beta} from "openai/resources";
-import AssistantStreamEvent = Beta.AssistantStreamEvent;
+import {AssistantStreamEvent} from "openai/resources/beta";
 
 type MessageProps = {
     role: "user" | "assistant" | "code";
