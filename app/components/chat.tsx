@@ -193,15 +193,23 @@ const Chat = ({
                 `/api/assistants/threads/${threadId}/messages`,
                 {
                     method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
                     body: JSON.stringify({
                         content: text,
                     }),
                 }
             );
-            if (!response.ok) throw new Error("Failed to send message");
+            if (!response.ok){
+                console.error("Failed to send message. Response:", response);
+                console.error("Response body:", await response.text());
+                throw new Error("Failed to send message");
+            }
             const stream = AssistantStream.fromReadableStream(response.body);
             handleReadableStream(stream);
         } catch (error) {
+
             console.error("Failed to send message:", error);
             // Re-enable input field on failure
             setInputDisabled(false);

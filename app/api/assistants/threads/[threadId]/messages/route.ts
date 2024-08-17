@@ -38,8 +38,15 @@ export async function POST(
       );
     }
 
+    const ip =
+        request.headers.get("x-real-ip") ||
+        request.headers.get("x-forwarded-for") ||
+        request.ip;
+
     const session = await getSession();
     const user = session?.user;
+    console.log("Session data:", session);
+    console.log("Rate limiting for user or IP:", user ? user.sub : ip);
 
     let rateLimit: Ratelimit;
     let success: boolean;
@@ -62,10 +69,7 @@ export async function POST(
       rateLimit = ratelimitLoggedOut;
     }
 
-    const ip =
-      request.headers.get("x-real-ip") ||
-      request.headers.get("x-forwarded-for") ||
-      request.ip;
+
 
     // use user's id if logged in or ip address if not
     if (user) {
@@ -85,7 +89,10 @@ export async function POST(
       );
     }
 
-    const { content } = await request.json();
+    const data = await request.json();
+    console.log("Created thread data:", data);
+
+    const { content } = data;
 
     await openai.beta.threads.messages.create(threadId, {
       role: "user",
