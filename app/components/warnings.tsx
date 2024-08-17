@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import styles from "./warnings.module.css";
-import { assistantId } from "../assistant-config";
 
 const Warnings = () => {
   const [loading, setLoading] = useState(false);
@@ -20,7 +19,7 @@ const Warnings = () => {
 
   return (
     <>
-      {!assistantId && (
+      {!process.env.OPENAI_ASSISTANT_ID && (
         <div className={styles.container}>
           <h1>Start by creating your assistant</h1>
           <div className={styles.message}>

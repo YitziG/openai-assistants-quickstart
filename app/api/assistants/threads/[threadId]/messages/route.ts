@@ -1,9 +1,8 @@
-import { assistantId } from "@/app/assistant-config";
-import { openai } from "@/app/openai";
 import { Ratelimit } from "@upstash/ratelimit";
 import { kv } from "@vercel/kv";
 import { getSession } from "@auth0/nextjs-auth0";
 import { NextRequest, NextResponse } from "next/server";
+import {openai} from "@/app/openai";
 
 // Define rate limiters for different user statuses
 const ratelimitLoggedOut = new Ratelimit({
@@ -100,7 +99,7 @@ export async function POST(
     });
 
     const stream = openai.beta.threads.runs.stream(threadId, {
-      assistant_id: assistantId,
+      assistant_id: process.env.OPENAI_ASSISTANT_ID,
     });
 
     return new Response(stream.toReadableStream());

@@ -1,4 +1,3 @@
-import { assistantId } from "@/app/assistant-config";
 import { openai } from "@/app/openai";
 
 // upload file to assistant's vector store
@@ -56,7 +55,7 @@ export async function DELETE(request) {
 /* Helper functions */
 
 const getOrCreateVectorStore = async () => {
-  const assistant = await openai.beta.assistants.retrieve(assistantId);
+  const assistant = await openai.beta.assistants.retrieve(process.env.OPENAI_ASSISTANT_ID);
 
   // if the assistant already has a vector store, return it
   if (assistant.tool_resources?.file_search?.vector_store_ids?.length > 0) {
@@ -66,7 +65,7 @@ const getOrCreateVectorStore = async () => {
   const vectorStore = await openai.beta.vectorStores.create({
     name: "sample-assistant-vector-store",
   });
-  await openai.beta.assistants.update(assistantId, {
+  await openai.beta.assistants.update(process.env.OPENAI_ASSISTANT_ID, {
     tool_resources: {
       file_search: {
         vector_store_ids: [vectorStore.id],
